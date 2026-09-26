@@ -2,6 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DNET4JL501"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DNET4JL501');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>倍倍タイル！</title>
 <meta name="description" content="5×5のマスに数字タイルを落として、同じ数字をくっつけて倍々に合体。どこまで大きな数字を作れるか挑戦するパズルゲーム。">
@@ -126,6 +128,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
   </div>
 
   <p class="rules"><b>スマホ</b>：左右にスワイプで列を選び、タップで落とします。<b>PC</b>：落としたい列をクリック。同じ数字が<b>上下左右でくっつく</b>と自動で合体。<b>2枚で2倍、3枚で4倍、4枚で8倍</b>。合体でさらにくっつけば連鎖ボーナス。降ってくる数字は、盤面にある一番大きい数字の2段階下まで。6段階以上小さい数字は出にくくなります。どの列にも置けなくなったら終わりです。</p>
+  <p class="rules" style="font-size:11px">このサイトでは、利用状況の把握のためにGoogleアナリティクスを使用しています。収集されるデータは匿名で、個人を特定するものではありません。</p>
 </div>
 
 <script>
@@ -143,6 +146,9 @@ const cls=v=>'e'+Math.min(exp(v),15);
 
 let best=0; try{best=+localStorage.getItem('mdrop-best')||0}catch(e){}
 
+// アクセス解析（公開版のみ gtag が読み込まれる。無ければ何もしない）
+function track(name,params){try{if(typeof window.gtag==='function')window.gtag('event',name,params||{})}catch(e){}}
+function bumpMax(v){if(v>S.maxTile){S.maxTile=v;if(v>=32)track('tile_reached',{tile:v})}}
 function boardMax(){let m=0;for(const row of S.grid)for(const t of row)if(t&&t.v>m)m=t.v;return m}
 function randVal(){
   // 上限は場の最大値の2段階下。場の最大値が8以下なら2と4のみ
@@ -157,7 +163,7 @@ function randVal(){
   return 2**hi;
 }
 function fresh(){
-  S={grid:Array.from({length:N},()=>Array(N).fill(null)),score:0,maxTile:2,next:0,next2:0,over:false};
+  S={grid:Array.from({length:N},()=>Array(N).fill(null)),score:0,maxTile:2,next:0,next2:0,over:false,moves:0,startedAt:Date.now()};
   // 初期タイル5枚を下から2段までにランダム配置。値は2/4/8で最大値は必ず8（隣り合う同じ数字は作らない）
   let placed=0;
   while(placed<5){
@@ -243,7 +249,7 @@ async function resolve(active){
       tt.v=tt.v*2**(m.g.length-1);targets.push(tt);
     }
     await sleep(150);
-    let gain=0;for(const t of targets){setVal(t);gain+=t.v;S.maxTile=Math.max(S.maxTile,t.v)}
+    let gain=0;for(const t of targets){setVal(t);gain+=t.v;bumpMax(t.v)}
     S.score+=gain*chain;combo(chain);paintHud();
     await sleep(120);
     const moved=await gravity();
@@ -254,7 +260,7 @@ function canDrop(c){const top=S.grid[0][c];return !top||top.v===S.next}
 async function drop(c){
   if(busy||S.over)return;
   if(!canDrop(c)){boardEl.classList.remove('shake');void boardEl.offsetWidth;boardEl.classList.add('shake');return}
-  busy=true;setSel(c);
+  busy=true;setSel(c);S.moves=(S.moves||0)+1;
   const v=S.next;S.next=S.next2;S.next2=randVal();paintQueue();
   const t={id:uid++,v};
   let r=-1;for(let i=N-1;i>=0;i--)if(!S.grid[i][c]){r=i;break}
@@ -268,11 +274,12 @@ async function drop(c){
     const top=S.grid[0][c];place(t.id,0,c);d.classList.add('gone');await sleep(140);d.remove();els.delete(t.id);
     const gp=group(0,c);
     for(const[a,b]of gp){if(a===0&&b===c)continue;const o=S.grid[a][b];const od=els.get(o.id);place(o.id,0,c);od&&od.classList.add('gone');S.grid[a][b]=null;setTimeout(()=>{od&&od.remove();els.delete(o.id)},170)}
-    top.v=top.v*2**gp.length;await sleep(150);setVal(top);S.maxTile=Math.max(S.maxTile,top.v);S.score+=top.v;paintHud();
+    top.v=top.v*2**gp.length;await sleep(150);setVal(top);bumpMax(top.v);S.score+=top.v;paintHud();
     await sleep(120);const moved=await gravity();await resolve([top.id,...moved]);
   }
   paintHud();
-  if(![0,1,2,3,4].some(canDrop)){S.over=true;showOver()}
+  if(![0,1,2,3,4].some(canDrop)){S.over=true;showOver();
+    track('game_over',{score:S.score,max_tile:S.maxTile,moves:S.moves||0,play_seconds:Math.round((Date.now()-(S.startedAt||Date.now()))/1000)})}
   busy=false;
 }
 function showOver(){
@@ -282,7 +289,9 @@ function showOver(){
   const b=document.createElement('button');b.textContent='もう一度あそぶ';b.onclick=restart;o.appendChild(b);
   document.querySelector('.boardbox').appendChild(o);b.focus();
 }
-function restart(){document.querySelector('.over')?.remove();busy=false;fresh();build();boardEl.focus()}
+function restart(){const was=S&&!S.over&&S.moves>0;document.querySelector('.over')?.remove();busy=false;
+  if(was)track('game_quit',{score:S.score,max_tile:S.maxTile,moves:S.moves});
+  fresh();build();boardEl.focus();track('game_start',{start_type:'restart'})}
 
 /* ---------- input ---------- */
 function colAt(x){const r=boardEl.getBoundingClientRect();return Math.max(0,Math.min(N-1,Math.floor((x-r.left)/r.width*N)))}
@@ -311,7 +320,7 @@ addEventListener('resize',posQueue);
 
 /* ---------- boot (keeps a game in progress across page updates) ---------- */
 function start(data){
-  if(data&&data.S&&data.S.grid){S=data.S;uid=data.uid||1000;}else fresh();
+  if(data&&data.S&&data.S.grid){S=data.S;uid=data.uid||1000;}else{fresh();track('game_start',{start_type:'first'})}
   build();
   window.claude?.hot?.snapshot?.(()=>({S,uid}));
 }
