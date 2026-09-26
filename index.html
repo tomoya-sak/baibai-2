@@ -144,7 +144,8 @@ const fmt=v=>v>=1e6?Math.round(v/1e6)+'M':v>=1e5?Math.round(v/1e3)+'K':String(v)
 const fsize=v=>{const n=fmt(v).length;return n<=2?'clamp(20px,7vw,30px)':n===3?'clamp(17px,6vw,25px)':n===4?'clamp(14px,4.8vw,20px)':'clamp(12px,4vw,17px)';};
 const cls=v=>'e'+Math.min(exp(v),15);
 
-let best=0; try{best=+localStorage.getItem('mdrop-best')||0}catch(e){}
+// v8でスコア計算を変更したため、ベストスコアは新しいキーで保存（旧キー mdrop-best は削除）
+let best=0; try{localStorage.removeItem('mdrop-best');best=+localStorage.getItem('bbtile-best-v2')||0}catch(e){}
 
 // アクセス解析（公開版のみ gtag が読み込まれる。無ければ何もしない）
 function track(name,params){try{if(typeof window.gtag==='function')window.gtag('event',name,params||{})}catch(e){}}
@@ -206,7 +207,7 @@ function posQueue(){
 }
 function paintHud(){
   $('score').textContent=S.score.toLocaleString();
-  if(S.score>best){best=S.score;try{localStorage.setItem('mdrop-best',best)}catch(e){}}
+  if(S.score>best){best=S.score;try{localStorage.setItem('bbtile-best-v2',best)}catch(e){}}
   $('best').textContent=best.toLocaleString();
   $('maxtile').textContent=S.maxTile.toLocaleString();
   paintQueue();
@@ -250,7 +251,8 @@ async function resolve(active){
     }
     await sleep(150);
     let gain=0;for(const t of targets){setVal(t);gain+=t.v;bumpMax(t.v)}
-    S.score+=gain*chain;combo(chain);paintHud();
+    // 加点 = できた数字 × (1 + 0.5 × (連鎖数 − 1))
+    S.score+=Math.round(gain*(1+0.5*(chain-1)));combo(chain);paintHud();
     await sleep(120);
     const moved=await gravity();
     active=[...targets.map(t=>t.id),...moved];
