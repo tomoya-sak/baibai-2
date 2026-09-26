@@ -50,18 +50,20 @@
 html,body{height:100%}
 body{background:var(--ground);color:var(--ink);font-family:var(--fb);padding-inline:16px;-webkit-tap-highlight-color:transparent}
 .wrap{max-width:420px;margin:0 auto;padding-block:20px 28px;display:flex;flex-direction:column;gap:14px}
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
 h1{font-family:var(--fd);font-weight:400;font-size:clamp(20px,6.4vw,28px);line-height:1.05;margin:0;letter-spacing:.01em;white-space:nowrap}
 h1 small{display:block;font-family:var(--fn);font-weight:600;font-size:12px;letter-spacing:.14em;color:var(--muted);margin-bottom:4px}
 .stats{display:flex;gap:6px}
 .stat{background:var(--panel);border-radius:10px;padding:6px 10px;min-width:56px;text-align:right}
 .stat span{display:block;font-size:10px;letter-spacing:.12em;color:var(--muted);font-weight:700}
 .stat b{font-family:var(--fn);font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
-.rail{display:flex;align-items:center;gap:10px}
-.rail .lab{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);writing-mode:horizontal-tb;width:34px}
-.queue{flex:1;position:relative;height:56px}
-.after{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.08em}
-.after .mini{width:30px;height:30px;border-radius:7px;display:grid;place-items:center;font-family:var(--fn);font-weight:800;font-size:12px}
+.queue{position:relative;height:78px}
+/* 次の次のタイル: 点線の箱に入れて、小さく薄く */
+.nextbox{border:1.5px dashed var(--muted);border-radius:10px;padding:4px 8px;display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.nextbox .mini{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-family:var(--fn);font-weight:800;font-size:12px;opacity:.6;box-shadow:none}
+.nextbox .mini.in{animation:minin .25s ease-out}
+@keyframes minin{from{transform:scale(.4);opacity:0}}
+.fly{position:fixed;z-index:50;border-radius:10px;display:grid;place-items:center;font-family:var(--fn);font-weight:800;pointer-events:none;transition:left .24s cubic-bezier(.3,.7,.3,1),top .24s cubic-bezier(.3,.7,.3,1),width .24s ease,height .24s ease,font-size .24s ease,opacity .24s ease}
 .boardbox{position:relative}
 .board{position:relative;aspect-ratio:1/1;width:100%;max-width:100%;background:var(--board);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;touch-action:manipulation;cursor:pointer;user-select:none}
 .board:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
@@ -77,7 +79,9 @@ h1 small{display:block;font-family:var(--fn);font-weight:600;font-size:12px;lett
 .tile.gone{opacity:0;z-index:1}
 .tile.pop{animation:pop .22s ease-out}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
-.qtile{position:absolute;top:4px;height:48px;width:48px;border-radius:10px;display:grid;place-items:center;font-family:var(--fn);font-weight:800;transition:left .12s ease;box-shadow:0 -3px 0 rgba(0,0,0,.14) inset}
+.qtile{position:absolute;top:2px;height:58px;width:58px;border-radius:12px;display:grid;place-items:center;font-family:var(--fn);font-weight:800;transition:left .12s ease,opacity .1s;box-shadow:0 -3px 0 rgba(0,0,0,.14) inset,0 8px 16px rgba(27,34,48,.22)}
+/* 今から落とすタイル: 下向きの矢印で落ちる列を指す */
+.qtile::after{content:"";position:absolute;left:50%;bottom:-15px;transform:translateX(-50%);border:7px solid transparent;border-top:8px solid var(--accent);border-bottom:0}
 .combo{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);font-family:var(--fd);font-size:34px;color:#fff;-webkit-text-stroke:1.5px var(--accent);paint-order:stroke;text-shadow:0 3px 0 var(--accent);pointer-events:none;z-index:5;animation:combo .8s ease-out forwards}
 @keyframes combo{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-80%)}}
 .shake{animation:shake .25s}
@@ -89,6 +93,10 @@ h1 small{display:block;font-family:var(--fn);font-weight:600;font-size:12px;lett
 .bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 button{font-family:var(--fb);font-weight:700;font-size:14px;border:0;border-radius:10px;padding:10px 16px;background:var(--accent);color:#fff;cursor:pointer}
 button.ghostbtn{background:var(--panel);color:var(--ink)}
+.btns{display:flex;gap:8px}
+#sound{display:flex;align-items:center;gap:6px}
+#sound svg{width:18px;height:18px}
+#sound[aria-pressed="false"]{color:var(--muted)}
 button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .rules{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
 .rules b{color:var(--ink)}
@@ -99,7 +107,7 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .e10{background:#15B3A6;color:#fff}.e11{background:#36B94F;color:#fff}.e12{background:#9FD235;color:#243300}
 .e13{background:#F5C400;color:#3A2E00}.e14{background:#1C2230;color:#F4C94A;box-shadow:0 0 0 2px #F4C94A inset}
 .e15,.e16{background:#0B0E14;color:#FF8FB1;box-shadow:0 0 0 2px #FF8FB1 inset}
-@media (prefers-reduced-motion: reduce){.tile,.qtile,.colhl{transition:none}.tile.pop,.combo,.shake{animation:none}}
+@media (prefers-reduced-motion: reduce){.tile,.qtile,.colhl,.fly{transition:none}.tile.pop,.combo,.shake,.nextbox .mini.in{animation:none}}
 </style>
 
 </head>
@@ -108,15 +116,13 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
   <header>
     <h1><small>5×5 MERGE PUZZLE</small>倍倍タイル！</h1>
     <div class="stats">
+      <div class="nextbox" aria-label="その次のタイル">Next<div class="mini" id="next2"></div></div>
       <div class="stat"><span>スコア</span><b id="score">0</b></div>
       <div class="stat"><span>ベスト</span><b id="best">0</b></div>
     </div>
   </header>
 
-  <div class="rail">
-    <div class="queue" id="queue"></div>
-    <div class="after"><div class="mini" id="next2"></div>Next</div>
-  </div>
+  <div class="queue" id="queue" aria-label="今から落とすタイル"></div>
 
   <div class="boardbox">
     <div class="board" id="board" tabindex="0" role="application" aria-label="5×5の盤面。列をタップしてタイルを落とす。キーボードは1〜5か矢印キーとスペース"></div>
@@ -124,7 +130,10 @@ button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 
   <div class="bar">
     <div class="rules">最大タイル <b id="maxtile">2</b></div>
-    <button class="ghostbtn" id="restart">はじめから</button>
+    <div class="btns">
+      <button class="ghostbtn" id="sound" aria-pressed="true"></button>
+      <button class="ghostbtn" id="restart">はじめから</button>
+    </div>
   </div>
 
   <p class="rules">列をタップ（クリック）するとタイルが落ちます。同じ数字が<b>上下左右でくっつく</b>と自動で合体。<b>2枚で2倍、3枚で4倍、4枚で8倍</b>。合体でさらにくっつけば連鎖ボーナス。降ってくる数字は、盤面にある一番大きい数字の2段階下まで。6段階以上小さい数字は出にくくなります。どの列にも置けなくなったら終わりです。</p>
@@ -150,6 +159,62 @@ let best=0; try{localStorage.removeItem('mdrop-best');best=+localStorage.getItem
 // アクセス解析（公開版のみ gtag が読み込まれる。無ければ何もしない）
 function track(name,params){try{if(typeof window.gtag==='function')window.gtag('event',name,params||{})}catch(e){}}
 function bumpMax(v){if(v>S.maxTile){S.maxTile=v;if(v>=32)track('tile_reached',{tile:v})}}
+/* ---------- サウンド（Web Audioで合成。音声ファイルなし） ---------- */
+let actx=null,master=null,soundOn=true;
+try{soundOn=localStorage.getItem('bbtile-sound')!=='0'}catch(e){}
+function audio(){
+  if(!soundOn)return null;
+  try{
+    if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;actx=new C();master=actx.createGain();master.gain.value=.55;master.connect(actx.destination)}
+    if(actx.state==='suspended')actx.resume();
+  }catch(e){return null}
+  return actx;
+}
+// 短いノイズ（パチッという弾ける成分）
+let noiseBuf=null;
+function noise(t,dur,freq,vol){
+  if(!noiseBuf){noiseBuf=actx.createBuffer(1,Math.floor(actx.sampleRate*.1),actx.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  const n=actx.createBufferSource(),bp=actx.createBiquadFilter(),g=actx.createGain();
+  n.buffer=noiseBuf;bp.type='bandpass';bp.frequency.value=freq;bp.Q.value=1.2;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  n.connect(bp);bp.connect(g);g.connect(master);n.start(t);n.stop(t+dur+.01);
+}
+// 短いブリップ（音程の動きはごくわずか。三角波が主体で、矩形波を少しだけ混ぜる）
+function blip(f,t,dur,vol){
+  const lp=actx.createBiquadFilter(),g=actx.createGain();
+  lp.type='lowpass';lp.frequency.value=2600;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  lp.connect(g);g.connect(master);
+  [['triangle',1],['square',.22]].forEach(([type,m])=>{
+    const o=actx.createOscillator(),og=actx.createGain();o.type=type;og.gain.value=m;
+    o.frequency.setValueAtTime(f*.92,t);o.frequency.exponentialRampToValueAtTime(f,t+.015);
+    o.connect(og);og.connect(lp);o.start(t);o.stop(t+dur+.02);
+  });
+}
+// 低い芯（ごく短い「トッ」。重さを足して軽薄さを消す）
+function thump(f,t,vol){
+  const o=actx.createOscillator(),g=actx.createGain();o.type='sine';
+  o.frequency.setValueAtTime(f*1.4,t);o.frequency.exponentialRampToValueAtTime(f,t+.03);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+  o.connect(g);g.connect(master);o.start(t);o.stop(t+.07);
+}
+// 合体音: 「パチッ」＋「トッ」＋短い音程。連鎖するほど音階が上がる（ペンタトニック）
+function playMerge(chain,value){
+  const a=audio();if(!a)return;
+  const t=a.currentTime+.005;
+  const deg=Math.min(11,(chain-1)*2+Math.min(2,Math.floor((exp(value)-1)/4)));
+  const sc=[0,2,4,7,9],st=12*Math.floor(deg/5)+sc[deg%5];
+  const f=440*2**((st+3)/12); // C5 から
+  noise(t,.03,2200+deg*200,.55);   // パチッ
+  thump(150,t,.22);                // トッ
+  blip(f,t,.06,.15);               // 音程
+  if(chain>=2)blip(f*2,t+.045,.045,.08);
+  if(value>=256){blip(f*1.5,t+.09,.045,.07);noise(t+.09,.025,4600,.22)}
+}
+const ICON_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const ICON_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 6 6M22 9l-6 6"/></svg>';
+function paintSound(){const b=$('sound');b.setAttribute('aria-pressed',soundOn);b.innerHTML=(soundOn?ICON_ON:ICON_OFF)+(soundOn?'音 ON':'音 OFF')}
+
 function boardMax(){let m=0;for(const row of S.grid)for(const t of row)if(t&&t.v>m)m=t.v;return m}
 function randVal(){
   // 上限は場の最大値の2段階下。場の最大値が8以下なら2と4のみ
@@ -185,7 +250,7 @@ function build(){
   const hl=document.createElement('div');hl.className='colhl';hl.id='colhl';boardEl.appendChild(hl);
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){const d=document.createElement('div');d.className='cell';d.style.setProperty('--r',r);d.style.setProperty('--c',c);boardEl.appendChild(d)}
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){const t=S.grid[r][c];if(t)makeEl(t,r,c)}
-  setSel(sel);paintHud();if(S.over)showOver();
+  paintQueue();setSel(sel);paintHud();if(S.over)showOver();
 }
 function makeEl(t,r,c){
   const d=document.createElement('div');d.className='tile '+cls(t.v);d.textContent=fmt(t.v);d.style.fontSize=fsize(t.v);
@@ -198,19 +263,32 @@ function paintQueue(){
   const q=document.createElement('div');q.className='qtile '+cls(S.next);q.textContent=fmt(S.next);q.style.fontSize=fsize(S.next);q.id='qt';
   queueEl.appendChild(q);posQueue();
   const m=$('next2');m.className='mini '+cls(S.next2);m.textContent=fmt(S.next2);
+  return q;
+}
+// 落としたあと、Nextのタイルが「今から落とすタイル」の位置へ移動する演出
+function flyNext(from){
+  const q=$('qt'),m=$('next2');if(!q||!from)return;
+  m.classList.remove('in');void m.offsetWidth;m.classList.add('in');
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const to=q.getBoundingClientRect();
+  const f=document.createElement('div');f.className='fly '+cls(S.next);f.textContent=fmt(S.next);
+  Object.assign(f.style,{left:from.left+'px',top:from.top+'px',width:from.width+'px',height:from.height+'px',fontSize:'12px',opacity:.6});
+  document.body.appendChild(f);q.style.opacity=0;void f.offsetWidth;
+  Object.assign(f.style,{left:to.left+'px',top:to.top+'px',width:to.width+'px',height:to.height+'px',fontSize:getComputedStyle(q).fontSize,opacity:1});
+  setTimeout(()=>{f.remove();const q2=$('qt');if(q2)q2.style.opacity=''},250);
 }
 function posQueue(){
   const q=$('qt');if(!q)return;
   const W=boardEl.clientWidth,p=8,g=7,cw=(W-2*p-4*g)/5;
-  q.style.width=q.style.height=Math.min(48,cw*.8)+'px';
-  q.style.left=(p+sel*(cw+g)+cw/2-Math.min(48,cw*.8)/2)+'px';
+  const sz=Math.min(62,cw*.88);
+  q.style.width=q.style.height=sz+'px';
+  q.style.left=(p+sel*(cw+g)+cw/2-sz/2)+'px';
 }
 function paintHud(){
   $('score').textContent=S.score.toLocaleString();
   if(S.score>best){best=S.score;try{localStorage.setItem('bbtile-best-v2',best)}catch(e){}}
   $('best').textContent=best.toLocaleString();
   $('maxtile').textContent=S.maxTile.toLocaleString();
-  paintQueue();
 }
 function setSel(c){sel=c;const h=$('colhl');if(h)h.style.setProperty('--c',c);posQueue()}
 function combo(n){if(n<2)return;const d=document.createElement('div');d.className='combo';d.textContent=n+'連鎖!';boardEl.appendChild(d);setTimeout(()=>d.remove(),850)}
@@ -252,7 +330,7 @@ async function resolve(active){
     await sleep(150);
     let gain=0;for(const t of targets){setVal(t);gain+=t.v;bumpMax(t.v)}
     // 加点 = できた数字 × (1 + 0.5 × (連鎖数 − 1))
-    S.score+=Math.round(gain*(1+0.5*(chain-1)));combo(chain);paintHud();
+    S.score+=Math.round(gain*(1+0.5*(chain-1)));combo(chain);playMerge(chain,Math.max(...targets.map(t=>t.v)));paintHud();
     await sleep(120);
     const moved=await gravity();
     active=[...targets.map(t=>t.id),...moved];
@@ -262,8 +340,10 @@ function canDrop(c){const top=S.grid[0][c];return !top||top.v===S.next}
 async function drop(c){
   if(busy||S.over)return;
   if(!canDrop(c)){boardEl.classList.remove('shake');void boardEl.offsetWidth;boardEl.classList.add('shake');return}
+  audio(); // 最初のタップで音を使えるようにする（ブラウザの決まり）
   busy=true;setSel(c);S.moves=(S.moves||0)+1;
-  const v=S.next;S.next=S.next2;S.next2=randVal();paintQueue();
+  const from=$('next2').getBoundingClientRect();
+  const v=S.next;S.next=S.next2;S.next2=randVal();paintQueue();flyNext(from);
   const t={id:uid++,v};
   let r=-1;for(let i=N-1;i>=0;i--)if(!S.grid[i][c]){r=i;break}
   const d=makeEl(t,-1,c);void d.offsetWidth;
@@ -276,7 +356,7 @@ async function drop(c){
     const top=S.grid[0][c];place(t.id,0,c);d.classList.add('gone');await sleep(140);d.remove();els.delete(t.id);
     const gp=group(0,c);
     for(const[a,b]of gp){if(a===0&&b===c)continue;const o=S.grid[a][b];const od=els.get(o.id);place(o.id,0,c);od&&od.classList.add('gone');S.grid[a][b]=null;setTimeout(()=>{od&&od.remove();els.delete(o.id)},170)}
-    top.v=top.v*2**gp.length;await sleep(150);setVal(top);bumpMax(top.v);S.score+=top.v;paintHud();
+    top.v=top.v*2**gp.length;await sleep(150);setVal(top);bumpMax(top.v);S.score+=top.v;playMerge(1,top.v);paintHud();
     await sleep(120);const moved=await gravity();await resolve([top.id,...moved]);
   }
   paintHud();
@@ -306,6 +386,8 @@ boardEl.addEventListener('keydown',e=>{
   else if(e.key===' '||e.key==='Enter'||e.key==='ArrowDown'){drop(sel);e.preventDefault()}
 });
 $('restart').onclick=restart;
+$('sound').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('bbtile-sound',soundOn?'1':'0')}catch(e){}paintSound();if(soundOn){audio();playMerge(1,4)}};
+paintSound();
 addEventListener('resize',posQueue);
 
 /* ---------- boot (keeps a game in progress across page updates) ---------- */
